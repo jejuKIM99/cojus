@@ -1,14 +1,13 @@
 #!/usr/bin/env node
-// src/index.js (ESM 모드로 __dirname 구현)
+// src/index.js
 
 import { program } from 'commander';
 import fs from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
+import { fileURLToPath } from 'url';   // ← 추가
 import { exec } from 'child_process';
 import chalk from 'chalk';
 import inquirer from 'inquirer';
-
 
 // ESM 환경에서 __dirname 생성
 const __filename = fileURLToPath(import.meta.url);
@@ -36,7 +35,7 @@ function loadData() {
 program
   .name('cojus')
   .description('문서 번호로 API 설치 및 삭제를 도와주는 CLI 툴')
-  .version('0.1.0', '-v, --version', '버전 정보 출력')
+  .version('0.1.5', '-v, --version', '버전 정보 출력')
   .allowUnknownOption(true);
 
 program.parse(process.argv);
