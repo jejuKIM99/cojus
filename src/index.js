@@ -1,13 +1,20 @@
 #!/usr/bin/env node
-// src/index.js
+// src/index.js (ESM 모드로 __dirname 구현)
 
 import { program } from 'commander';
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import { exec } from 'child_process';
 import chalk from 'chalk';
-import inquirer from 'inquirer';    // ← inquirer import
+import inquirer from 'inquirer';
 
+
+// ESM 환경에서 __dirname 생성
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// 데이터 파일 경로
 const DATA_PATH = path.resolve(__dirname, '../data/api_posts.json');
 
 function loadData() {
@@ -37,12 +44,10 @@ const args = process.argv.slice(2);
 
 (async () => {
   const data = loadData(); // [{id, npm_command, title}, ...]
-  // Map으로 빠른 조회
   const mapById = new Map(data.map(item => [item.id, item]));
 
   // 삭제 모드
   if (args.includes('-del')) {
-    // 설치된 라이브러리 목록(예: data.json에 있는 title 리스트) 보여주기
     const choices = data.map(item => ({ name: item.title, value: item.title }));
     choices.unshift({ name: 'all', value: 'all' });
 
@@ -58,7 +63,6 @@ const args = process.argv.slice(2);
 
     let targets = answers.toRemove;
     if (targets.includes('all')) {
-      // all 선택 시 전체 삭제
       targets = data.map(item => item.title);
     }
 
@@ -81,7 +85,7 @@ const args = process.argv.slice(2);
     process.exit(0);
   }
 
-  // 기존 설치 모드: -<문서번호> 로 설치
+  // 설치 모드
   if (args.length === 0) {
     console.error(chalk.yellow('사용법: cojus -<문서번호> [-<문서번호> ...] 형식으로 입력하세요.'));
     process.exit(1);
