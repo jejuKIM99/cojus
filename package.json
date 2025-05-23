@@ -1,0 +1,30 @@
+{
+  "name": "cojus",
+  "version": "0.1.1",
+  "description": "API 문서 번호만 입력하면 해당 npm 설치 명령어를 실행해주는 CLI 툴",
+  "main": "src/index.js",
+  "bin": {
+    "cojus": "src/index.js"
+  },
+  "scripts": {
+    "fetch-data": "node scripts/fetch-api-posts.js"
+  },
+  "keywords": [
+    "npm",
+    "cli",
+    "api",
+    "install",
+    "cojus"
+  ],
+  "author": "jejuKIM99",
+  "license": "MIT",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.8",
+    "chalk": "^5.0.0",
+    "commander": "^10.0.0",
+    "dotenv": "^16.5.0"
+  },
+  "engines": {
+    "node": ">=14"
+  }
+}
