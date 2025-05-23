@@ -1,4 +1,4 @@
-name: Sync API Posts and Publish cojus
+name: Sync API Posts and Publish cojus-cli
 
 # 1시간마다 한 번씩 실행 (cron: UTC 기준)
 on:
