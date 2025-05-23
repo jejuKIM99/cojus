@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// src/index.js (ESM 모드로 __dirname 구현 및 삭제 대화형 필터링)
+// src/index.js (ESM 모드: 삭제 시 npm 패키지명으로 필터링)
 
 import { program } from 'commander';
 import fs from 'fs';
@@ -47,7 +47,7 @@ const args = process.argv.slice(2);
 
   // 삭제 모드
   if (args.includes('-del')) {
-    // 현재 프로젝트에 설치된 패키지 목록 조회
+    // 설치된 패키지 목록 불러오기
     let installedNames = [];
     try {
       const json = execSync('npm list --depth=0 --json').toString();
@@ -57,37 +57,44 @@ const args = process.argv.slice(2);
       console.error(chalk.red('Error: 설치된 패키지 목록을 불러올 수 없습니다.'));
       process.exit(1);
     }
-    // 설치된 항목 중 JSON에 정의된 패키지만 필터링
-    const installedItems = data.filter(item => installedNames.includes(item.title));
+
+    // api_posts.json에서 npm 패키지명 추출
+    const itemsWithPkg = data.map(item => {
+      const parts = item.npm_command.trim().split(' ');
+      const pkgName = parts[parts.length - 1];
+      return { ...item, pkgName };
+    });
+
+    // 실제 설치된 것만 필터
+    const installedItems = itemsWithPkg.filter(item => installedNames.includes(item.pkgName));
     if (installedItems.length === 0) {
       console.log(chalk.yellow('설치된 라이브러리가 없습니다.'));
       process.exit(0);
     }
-    const choices = installedItems.map(item => ({ name: item.title, value: item.title }));
+
+    // 선택지: 제목 (npm 패키지명)
+    const choices = installedItems.map(item => ({ name: `${item.title} (${item.pkgName})`, value: item.pkgName }));
     choices.unshift({ name: 'all', value: 'all' });
 
-    const answers = await inquirer.prompt([
-      {
-        type: 'checkbox',
-        name: 'toRemove',
-        message: '삭제할 라이브러리를 선택하세요 (스페이스바로 선택 후 엔터)',
-        choices,
-        validate: sel => sel.length > 0 || '최소 한 개 이상 선택해야 합니다.',
-      },
-    ]);
+    const answers = await inquirer.prompt([{
+      type: 'checkbox',
+      name: 'toRemove',
+      message: '삭제할 라이브러리를 선택하세요 (스페이스바로 선택 후 엔터)',
+      choices,
+      validate: sel => sel.length > 0 || '최소 한 개 이상 선택해야 합니다.'
+    }]);
 
     let targets = answers.toRemove;
     if (targets.includes('all')) {
-      targets = installedItems.map(item => item.title);
+      targets = installedItems.map(item => item.pkgName);
     }
 
     for (const pkg of targets) {
       console.log(chalk.cyan(`→ ${pkg} 삭제 중...`));
       await new Promise(resolve => {
         exec(`npm uninstall ${pkg}`, { shell: true }, (err, stdout, stderr) => {
-          if (err) {
-            console.error(chalk.red(`${pkg} 삭제 실패: ${err.message}`));
-          } else {
+          if (err) console.error(chalk.red(`${pkg} 삭제 실패: ${err.message}`));
+          else {
             if (stdout) console.log(chalk.green(stdout));
             if (stderr) console.error(chalk.yellow(stderr));
             console.log(chalk.magenta(`${pkg} 삭제 완료.`));
@@ -106,10 +113,7 @@ const args = process.argv.slice(2);
     process.exit(1);
   }
 
-  const docIds = args
-    .map(arg => arg.startsWith('-') ? parseInt(arg.substring(1), 10) : null)
-    .filter(x => x !== null);
-
+  const docIds = args.map(arg => arg.startsWith('-') ? parseInt(arg.substring(1), 10) : null).filter(x => x !== null);
   if (docIds.length === 0) {
     console.error(chalk.red('잘못된 입력입니다. 예: cojus -101 -102'));
     process.exit(1);
