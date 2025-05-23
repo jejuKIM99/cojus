@@ -1,5 +1,10 @@
 name: sync-api-posts
 
+# 워크플로 권한 설정: contents(코드) 쓰기 권한을 부여해야 push 가능
+permissions:
+  contents: write
+  packages: read
+
 on:
   schedule:
     - cron: '0 * * * *'       # 매 정각 UTC 기준 (KST 매 시간 9시,10시…)
@@ -14,6 +19,10 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+        with:
+          # push할 때도 checkout된 repo에 쓰기 권한 유지
+          persist-credentials: true
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
@@ -21,11 +30,9 @@ jobs:
           node-version: '16'
           registry-url: 'https://registry.npmjs.org'
 
-      # 의존성 설치
       - name: Install dependencies
         run: npm install
 
-      # lock 파일 변경 복구: npm install이 package-lock.json을 수정했을 경우 원복
       - name: Restore package-lock.json
         run: git checkout -- package-lock.json
 
@@ -35,7 +42,7 @@ jobs:
       - name: Check for data/api_posts.json changes
         id: detect_changes
         run: |
-          git diff --quiet data/api_posts.json || echo "::set-output name=changed::true"
+          git diff --quiet data/api_posts.json || echo "changed=true" >> $GITHUB_OUTPUT
 
       - name: No changes, exit
         if: steps.detect_changes.outputs.changed != 'true'
@@ -53,14 +60,15 @@ jobs:
 
       - name: Bump patch version
         if: steps.detect_changes.outputs.changed == 'true'
-        run: |
-          npm version patch -m "chore: bump version to %s"
+        run: npm version patch -m "chore: bump version to %s"
 
       - name: Push changes
         if: steps.detect_changes.outputs.changed == 'true'
         uses: ad-m/github-push-action@v0.6.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          # 기본 브랜치를 main으로 맞춤
+          branch: main
           tags: true
 
       - name: Publish to npm
