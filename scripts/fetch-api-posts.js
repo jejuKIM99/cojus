@@ -1,14 +1,14 @@
-// scripts/fetch-api-posts.js
-// =================================
-// Supabase의 api_posts 테이블 중
-//   - type 컬럼이 'API'
-//   - npm_command 컬럼이 null이 아님
-// 을 select하여 data/api_posts.json에 저장
+#!/usr/bin/env node
+// scripts/fetch-api-posts.js (ESM 모드)
 
-const fs = require('fs');
-const path = require('path');
-const { createClient } = require('@supabase/supabase-js');
-require('dotenv').config();
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import dotenv from 'dotenv';
+import { createClient } from '@supabase/supabase-js';
+
+// 환경변수 로드
+dotenv.config();
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
@@ -19,11 +19,16 @@ if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
 }
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ESM 환경에서 __dirname 구현
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const OUTPUT_PATH = path.resolve(__dirname, '../data/api_posts.json');
 
-(async () => {
+async function main() {
   try {
-    // title 컬럼도 함께 조회하도록 수정
+    // id, npm_command, title 컬럼 조회
     const { data, error } = await supabase
       .from('api_posts')
       .select('id, npm_command, title')
@@ -36,10 +41,13 @@ const OUTPUT_PATH = path.resolve(__dirname, '../data/api_posts.json');
       process.exit(1);
     }
 
-    fs.writeFileSync(OUTPUT_PATH, JSON.stringify(data, null, 2), 'utf-8');
+    // JSON 파일에 기록
+    await fs.promises.writeFile(OUTPUT_PATH, JSON.stringify(data, null, 2), 'utf-8');
     console.log(`Success: ${OUTPUT_PATH} 파일이 업데이트되었습니다. 총 ${data.length}개 레코드.`);
   } catch (err) {
     console.error(`Error: Supabase 데이터 가져오기 실패 → ${err.message}`);
     process.exit(1);
   }
-})();
+}
+
+main();
