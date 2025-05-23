@@ -1,0 +1,53 @@
+name: Sync API Posts from Supabase
+
+# 1시간마다 한 번씩 실행 (cron: UTC 기준)
+on:
+  schedule:
+    - cron: '0 15 * * *'   # 매 시간 정각 (UTC) → 한국 시각으로는 +9시간 (ex. 0 UTC = 9 AM KST)
+  workflow_dispatch:     # 수동 실행 가능
+
+jobs:
+  update-api-posts:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1) 저장소 체크아웃
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true   # git push 권한 위해 필요
+
+      # 2) Node.js 설정 (버전은 원하는 대로)
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18.x'
+          cache: 'npm'
+
+      # 3) 환경변수 설정 (GitHub Secrets)
+      - name: Load environment variables
+        run: |
+          echo "SUPABASE_URL=${{ secrets.SUPABASE_URL }}" >> $GITHUB_ENV
+          echo "SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}" >> $GITHUB_ENV
+
+      # 4) 의존성 설치
+      - name: Install dependencies
+        run: npm ci
+
+      # 5) Supabase에서 데이터 가져와 JSON 업데이트
+      - name: Fetch API Posts to JSON
+        run: npm run fetch-data
+
+      # 6) 변경사항 커밋 및 푸시
+      - name: Commit and Push changes
+        run: |
+          # 변경된 파일이 있는지 확인
+          if [[ -n $(git status --porcelain) ]]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add data/api_posts.json
+            git commit -m "chore: update api_posts.json from Supabase [ci skip]"
+            git push origin HEAD:${{ github.ref_name }}
+          else
+            echo "No changes detected in api_posts.json"
+          fi
