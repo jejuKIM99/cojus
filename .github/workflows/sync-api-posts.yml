@@ -1,71 +1,79 @@
-name: Sync API Posts and Publish cojus-cli
+name: sync-api-posts
 
-# 1시간마다 한 번씩 실행 (cron: UTC 기준)
 on:
+  # 1. 매 시간 정각(UTC 0분)에 실행 → KST 기준으로 매 시간 9시, 10시, ... 에 실행
   schedule:
-    - cron: '0 15 * * *'      # 매 시간 정각 (UTC) → 한국 시각 기준 시+9
-  workflow_dispatch:         # 수동 실행 가능
+    - cron: '0 * * * *'
+  # 2. 수동 실행 가능
+  workflow_dispatch:
 
 jobs:
-  sync-and-publish:
+  sync:
     runs-on: ubuntu-latest
-
+    env:
+      # Supabase 및 NPM 퍼블리시 토큰은 레포지토리 시크릿에서 설정
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
     steps:
-      # 1) 저장소 체크아웃
+      # 레포지토리 체크아웃
       - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          persist-credentials: true   # 이후 git push를 위해 필요
+        uses: actions/checkout@v3
 
-      # 2) Node.js 설정 및 npm 레지스트리 인증
-      - name: Setup Node.js and npm auth
-        uses: actions/setup-node@v4
+      # Node.js 셋업 (npm 퍼블리시용 인증)
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
         with:
-          node-version: '18.x'
+          node-version: '16'
           registry-url: 'https://registry.npmjs.org'
-      - name: Configure npm auth token
-        run: |
-          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
 
-      # 3) Supabase 환경변수 로드
-      - name: Load Supabase environment variables
-        run: |
-          echo "SUPABASE_URL=${{ secrets.SUPABASE_URL }}" >> $GITHUB_ENV
-          echo "SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}" >> $GITHUB_ENV
-
-      # 4) 의존성 설치
+      # 의존성 설치
       - name: Install dependencies
         run: npm ci
 
-      # 5) Supabase에서 데이터 가져와 JSON 업데이트
-      - name: Fetch API Posts to JSON
+      # API 포스트 JSON 갱신 스크립트 실행
+      - name: Fetch API posts
         run: npm run fetch-data
 
-      # 6) 변경 감지 → 버전 bump → npm publish → Git 커밋 & 푸시
-      - name: Check for changes, bump version, and publish to npm
+      # 3. JSON 파일 변경 여부 검사
+      - name: Check for data/api_posts.json changes
+        id: detect_changes
         run: |
-          # JSON만 변경됐을 때(패치할 항목이 있을 때)만 실행
-          if [[ -n "$(git status --porcelain -- data/api_posts.json)" ]]; then
-            echo "🔄 data/api_posts.json 변경 감지됨. 버전 bump 및 npm publish 진행."
+          # 변경이 없으면 exit 코드 0 유지 → 변경 있으면 exit 코드 1
+          git diff --quiet data/api_posts.json || echo "::set-output name=changed::true"
 
-            # 6-1) 패치 버전 자동 증가 (package.json과 package-lock.json만 변경)
-            npm version patch --no-git-tag-version
+      # 변경 없으면 워크플로 종료
+      - name: No changes, exit
+        if: steps.detect_changes.outputs.changed != 'true'
+        run: |
+          echo "data/api_posts.json에 변경된 항목이 없습니다. 작업을 종료합니다."
+      
+      # 변경 있을 때만 이하 단계 실행
+      # 커밋 & 버전 패치
+      - name: Commit updated JSON
+        if: steps.detect_changes.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/api_posts.json
+          git commit -m "chore: update data/api_posts.json"
 
-            # 6-2) npm 레지스트리에 퍼블리시 (토큰 인증 완료된 상태)
-            npm publish --access public
+      - name: Bump patch version
+        if: steps.detect_changes.outputs.changed == 'true'
+        run: |
+          # package.json, package-lock.json 자동 패치 & 커밋(tag 포함)
+          npm version patch -m "chore: bump version to %s"
 
-            # 6-3) Git 사용자 정보 설정 (Actions bot)
-            git config user.name "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
+      # 푸시 (커밋 및 태그)
+      - name: Push changes
+        if: steps.detect_changes.outputs.changed == 'true'
+        uses: ad-m/github-push-action@v0.6.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          tags: true
 
-            # 6-4) 변경된 파일들 스테이징
-            git add data/api_posts.json package.json package-lock.json
-
-            # 6-5) 커밋 (메시지에 [skip ci] 추가하여 무한 재실행 방지)
-            git commit -m "chore: update api_posts.json & bump version [skip ci]"
-
-            # 6-6) 브랜치에 푸시
-            git push origin HEAD:${{ github.ref_name }}
-          else
-            echo "✅ data/api_posts.json 변경 없음. npm publish 스킵."
-          fi
+      # npm 퍼블리시
+      - name: Publish to npm
+        if: steps.detect_changes.outputs.changed == 'true'
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish
