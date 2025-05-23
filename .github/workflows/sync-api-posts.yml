@@ -2,7 +2,7 @@ name: sync-api-posts
 
 on:
   schedule:
-    - cron: '0 * * * *'       # 매 정각 UTC 기준 (KST 매 시각 9시,10시…)
+    - cron: '0 * * * *'       # 매 정각 UTC 기준 (KST 매 시간 9시,10시…)
   workflow_dispatch:          # 수동 실행 지원
 
 jobs:
@@ -21,9 +21,13 @@ jobs:
           node-version: '16'
           registry-url: 'https://registry.npmjs.org'
 
-      # ← 여기서 npm ci 대신 npm install 사용
+      # 의존성 설치
       - name: Install dependencies
         run: npm install
+
+      # lock 파일 변경 복구: npm install이 package-lock.json을 수정했을 경우 원복
+      - name: Restore package-lock.json
+        run: git checkout -- package-lock.json
 
       - name: Fetch API posts
         run: npm run fetch-data
