@@ -1,6 +1,17 @@
 [
   {
+    "id": 36,
+    "npm_command": "npm install gsap",
+    "title": "GSAP"
+  },
+  {
     "id": 40,
-    "npm_command": "test"
+    "npm_command": "test",
+    "title": "FullPage.js"
+  },
+  {
+    "id": 38,
+    "npm_command": "npm install swiper",
+    "title": "Swiper.js"
   }
 ]
