@@ -1,6 +1,7 @@
 {
   "name": "cojus-cli",
   "version": "0.1.4",
+  "type": "module",
   "description": "code_jesus!",
   "main": "src/index.js",
   "bin": {
