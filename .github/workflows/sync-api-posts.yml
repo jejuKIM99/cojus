@@ -1,54 +1,44 @@
 name: sync-api-posts
 
 on:
-  # 1. 매 시간 정각(UTC 0분)에 실행 → KST 기준으로 매 시간 9시, 10시, ... 에 실행
   schedule:
-    - cron: '0 * * * *'
-  # 2. 수동 실행 가능
-  workflow_dispatch:
+    - cron: '0 * * * *'       # 매 정각 UTC 기준 (KST 매 시각 9시,10시…)
+  workflow_dispatch:          # 수동 실행 지원
 
 jobs:
   sync:
     runs-on: ubuntu-latest
     env:
-      # Supabase 및 NPM 퍼블리시 토큰은 레포지토리 시크릿에서 설정
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
     steps:
-      # 레포지토리 체크아웃
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # Node.js 셋업 (npm 퍼블리시용 인증)
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '16'
           registry-url: 'https://registry.npmjs.org'
 
-      # 의존성 설치
+      # ← 여기서 npm ci 대신 npm install 사용
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
-      # API 포스트 JSON 갱신 스크립트 실행
       - name: Fetch API posts
         run: npm run fetch-data
 
-      # 3. JSON 파일 변경 여부 검사
       - name: Check for data/api_posts.json changes
         id: detect_changes
         run: |
-          # 변경이 없으면 exit 코드 0 유지 → 변경 있으면 exit 코드 1
           git diff --quiet data/api_posts.json || echo "::set-output name=changed::true"
 
-      # 변경 없으면 워크플로 종료
       - name: No changes, exit
         if: steps.detect_changes.outputs.changed != 'true'
         run: |
           echo "data/api_posts.json에 변경된 항목이 없습니다. 작업을 종료합니다."
-      
-      # 변경 있을 때만 이하 단계 실행
-      # 커밋 & 버전 패치
+          exit 0
+
       - name: Commit updated JSON
         if: steps.detect_changes.outputs.changed == 'true'
         run: |
@@ -60,10 +50,8 @@ jobs:
       - name: Bump patch version
         if: steps.detect_changes.outputs.changed == 'true'
         run: |
-          # package.json, package-lock.json 자동 패치 & 커밋(tag 포함)
           npm version patch -m "chore: bump version to %s"
 
-      # 푸시 (커밋 및 태그)
       - name: Push changes
         if: steps.detect_changes.outputs.changed == 'true'
         uses: ad-m/github-push-action@v0.6.0
@@ -71,7 +59,6 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           tags: true
 
-      # npm 퍼블리시
       - name: Publish to npm
         if: steps.detect_changes.outputs.changed == 'true'
         env:
