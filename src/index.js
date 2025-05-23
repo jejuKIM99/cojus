@@ -1,11 +1,11 @@
 #!/usr/bin/env node
-// src/index.js
+// src/index.js (ESM 모드로 __dirname 구현 및 삭제 대화형 필터링)
 
 import { program } from 'commander';
 import fs from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';   // ← 추가
-import { exec } from 'child_process';
+import { fileURLToPath } from 'url';
+import { exec, execSync } from 'child_process';
 import chalk from 'chalk';
 import inquirer from 'inquirer';
 
@@ -47,7 +47,23 @@ const args = process.argv.slice(2);
 
   // 삭제 모드
   if (args.includes('-del')) {
-    const choices = data.map(item => ({ name: item.title, value: item.title }));
+    // 현재 프로젝트에 설치된 패키지 목록 조회
+    let installedNames = [];
+    try {
+      const json = execSync('npm list --depth=0 --json').toString();
+      const parsed = JSON.parse(json);
+      installedNames = parsed.dependencies ? Object.keys(parsed.dependencies) : [];
+    } catch {
+      console.error(chalk.red('Error: 설치된 패키지 목록을 불러올 수 없습니다.'));
+      process.exit(1);
+    }
+    // 설치된 항목 중 JSON에 정의된 패키지만 필터링
+    const installedItems = data.filter(item => installedNames.includes(item.title));
+    if (installedItems.length === 0) {
+      console.log(chalk.yellow('설치된 라이브러리가 없습니다.'));
+      process.exit(0);
+    }
+    const choices = installedItems.map(item => ({ name: item.title, value: item.title }));
     choices.unshift({ name: 'all', value: 'all' });
 
     const answers = await inquirer.prompt([
@@ -62,7 +78,7 @@ const args = process.argv.slice(2);
 
     let targets = answers.toRemove;
     if (targets.includes('all')) {
-      targets = data.map(item => item.title);
+      targets = installedItems.map(item => item.title);
     }
 
     for (const pkg of targets) {
