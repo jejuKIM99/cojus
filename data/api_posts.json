@@ -13,5 +13,20 @@
     "id": 38,
     "npm_command": "npm install swiper",
     "title": "Swiper.js"
+  },
+  {
+    "id": 46,
+    "npm_command": "npm install aos",
+    "title": "Animate On Scroll"
+  },
+  {
+    "id": 47,
+    "npm_command": "npm install chart.js",
+    "title": "Chart.js"
+  },
+  {
+    "id": 48,
+    "npm_command": "npm install d3",
+    "title": "d3.js"
   }
 ]
