@@ -26,7 +26,7 @@
   },
   {
     "id": 49,
-    "npm_command": "npm install vu",
+    "npm_command": "npm install vue",
     "title": "vue"
   }
 ]
