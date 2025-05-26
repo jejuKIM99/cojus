@@ -1,5 +1,10 @@
 [
   {
+    "id": 50,
+    "npm_command": "",
+    "title": "Nuxt 3"
+  },
+  {
     "id": 36,
     "npm_command": "npm install gsap",
     "title": "GSAP"
@@ -20,13 +25,13 @@
     "title": "Chart.js"
   },
   {
-    "id": 48,
-    "npm_command": "npm install d3",
-    "title": "d3.js"
-  },
-  {
     "id": 49,
     "npm_command": "npm install vue",
     "title": "vue"
+  },
+  {
+    "id": 48,
+    "npm_command": "npm install d3",
+    "title": "d3.js"
   }
 ]
