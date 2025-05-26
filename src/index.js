@@ -66,9 +66,12 @@ const args = process.argv.slice(2);
   if (args.includes('-list')) {
     console.log(chalk.cyan('Available APIs in api_posts.json'));
     console.log(chalk.cyan('-------------------------------'));
-    data.forEach(item => {
-      console.log(`ID: ${item.id}, Title: ${item.title}`);
-    });
+    const tableData = data.map(item => ({
+      ID: item.id,
+      Title: item.title,
+      'NPM Command': item.npm_command
+    }));
+    console.table(tableData);
     process.exit(0);
   }
 
@@ -172,25 +175,5 @@ const args = process.argv.slice(2);
     }
   }
 
-  console.log(chalk.magenta('\nAll tasks completed successfully.'));
-  console.log(chalk.green(`
-⠐⠐⠐⡐⠐⠐⠐⠐⠐⠐⠐⠐⠐⡀⠡⠐⠐⢀⠡⠐⠐⠐⠐⠐⠐⠐⠐⠐⠐⢐⠐⠐⠐⡐⢈
-⡈⡈⠄⠐⢈⢈⢈⢈⢈⠨⠈⡈⠄⠄⣢⣬⣬⣴⣴⣬⣌⢈⠨⠈⡈⡈⠌⢈⠈⠄⠠⠁⡁⠄⠄
-⠐⠀⡂⠁⠄⠄⠄⠐⡀⠄⠡⣀⣢⡾⢿⠯⠟⠓⠿⣞⠿⣳⣄⣁⠄⠐⢀⠂⠐⠐⡀⠁⠄⠂⢂
-⠈⠄⠠⠁⠂⢂⢈⠠⠐⠐⠠⠼⣏⣙⡵⠞⠿⠛⡿⠶⣬⣙⣹⠦⢀⠡⠀⠂⡁⠡⠀⠡⠈⡐⠠
-⢂⠈⠄⡈⠌⠠⠀⢂⢈⠈⠄⣸⣟⡇⠰⠖⢥⠂⠴⠶⠄⢸⣿⣇⠀⡂⠈⠄⠐⢀⠁⠌⠠⠐⢀
-⠠⠐⠀⡂⠐⡀⠡⠠⠐⢀⢢⣿⠯⡇⢈⠛⢹⠁⠌⢋⠐⢸⢷⣿⡄⠠⠁⡈⡈⠄⠐⢀⢁⠈⠄
-⡀⡁⠅⠐⠠⠐⠐⡈⠐⠠⠀⣿⢷⣿⡄⣢⡾⠟⣧⣄⢢⣿⡾⣷⠀⢂⠡⠠⠐⡀⠡⠠⠀⢂⠈
-⠄⠐⡀⡁⠌⢀⠡⠀⠅⡈⢰⡿⣯⡷⣿⢿⣘⣶⣃⣿⣟⢷⣟⣿⡆⠐⡀⠂⡁⢐⠐⢀⠡⠀⠂
-⢁⠂⠠⠐⢈⠠⠐⢀⠡⠠⠀⣛⡯⠇⡈⠻⢿⠽⡯⠟⠠⠸⢟⣚⠀⠡⢀⠡⠀⢂⠐⠠⠐⠈⠄
-⠀⡂⢁⠈⠄⠐⡈⠠⠐⡼⠚⡉⠄⠂⣰⡔⠀⡂⣀⣿⢰⣌⠀⠍⠳⢮⠀⡐⢈⠀⡂⠁⠌⠐⡈
-⠡⠀⢂⠐⢈⠠⠐⢀⠹⠀⢂⢐⣼⠞⢋⠀⠅⢄⣾⠃⠠⠙⠻⣦⡈⠈⠇⡀⠂⠄⠠⢁⠨⠀⠄
-⠂⠡⠀⠌⡀⢂⠈⠄⠄⠡⠠⠈⡙⢷⣤⡂⠈⣼⠃⠨⢀⡵⠾⠋⡀⠡⠐⡀⠌⠐⡀⠂⡐⢈⠠
-⠨⠐⢈⠠⠐⡀⢐⠀⡁⢂⠈⠄⠄⠂⡈⢃⠹⠏⠠⠁⡈⠅⡈⠄⠐⡀⠡⠀⢂⠁⠄⠡⠠⠀⢂
-⠄⠨⢀⠐⡀⣂⡐⠠⣐⣀⠐⣈⣀⣿⠀⣄⣂⠈⣞⠠⣐⡠⠐⣈⡄⢐⡀⢡⡀⣂⣂⠂⡁⠌⢀
-⠄⠨⢀⠐⢸⡩⢉⣸⡏⢘⡇⣿⠉⣿⢸⡧⠽⠆⣿⢸⡭⠽⠘⠧⢭⢸⡇⢸⡇⠿⢬⡠⠐⢈⠀
-⡈⠄⠂⡐⢈⠙⢋⠀⡙⢋⢁⠉⡋⠋⠌⠙⢋⢡⡿⢈⠙⢋⠈⢛⠋⡈⠛⢙⠁⡙⢋⠠⠈⠄⡈
-⠀⢂⠡⠠⠐⢀⠂⠐⠠⠀⠂⠄⢂⠈⠄⠁⠄⠄⢂⠠⠈⠄⠨⠀⠄⠂⡁⠄⢂⠠⠐⠠⠈⠄⠐
-⠁⠄⠂⡈⢐⠀⠌⠈⠄⡁⠌⢀⠂⢐⠈⡀⠅⢈⠠⠐⢈⠐⡈⠐⡈⠠⠐⢀⠂⠐⡈⠄⠨⢀⠡
-`));
+  console.log(chalk.green('\nAll installation tasks completed successfully.'));
 })();

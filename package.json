@@ -8,7 +8,8 @@
     "cojus": "src/index.js"
   },
   "scripts": {
-    "fetch-data": "node scripts/fetch-api-posts.js"
+    "fetch-data": "node scripts/fetch-api-posts.js",
+    "postinstall": "node scripts/postinstall.js"
   },
   "keywords": [
     "npm",
@@ -24,7 +25,8 @@
     "chalk": "^5.0.0",
     "commander": "^10.0.0",
     "dotenv": "^16.5.0",
-    "inquirer": "^8.2.4"
+    "inquirer": "^8.2.4",
+    "progress": "^2.0.3"
   },
   "engines": {
     "node": ">=14"
