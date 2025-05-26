@@ -10,6 +10,11 @@
     "title": "GSAP"
   },
   {
+    "id": 51,
+    "npm_command": "",
+    "title": "Svelte"
+  },
+  {
     "id": 38,
     "npm_command": "npm install swiper",
     "title": "Swiper.js"
@@ -33,5 +38,10 @@
     "id": 48,
     "npm_command": "npm install d3",
     "title": "d3.js"
+  },
+  {
+    "id": 52,
+    "npm_command": "npm install react react-dom",
+    "title": "React"
   }
 ]
