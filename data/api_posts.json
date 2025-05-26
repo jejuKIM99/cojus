@@ -1,18 +1,8 @@
 [
   {
-    "id": 50,
-    "npm_command": "",
-    "title": "Nuxt 3"
-  },
-  {
     "id": 36,
     "npm_command": "npm install gsap",
     "title": "GSAP"
-  },
-  {
-    "id": 51,
-    "npm_command": "",
-    "title": "Svelte"
   },
   {
     "id": 38,
