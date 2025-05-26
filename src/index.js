@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// src/index.js (ESM mode: uninstall filters by npm package name)
+// src/index.js (ESM mode: filtering by npm package name for deletion)
 
 import { program } from 'commander';
 import fs from 'fs';
@@ -9,29 +9,7 @@ import { exec, execSync } from 'child_process';
 import chalk from 'chalk';
 import inquirer from 'inquirer';
 
-// ASCII art for successful operation
-const SUCCESS_ASCII_ART = `
-⠐⠐⠐⡐⠐⠐⠐⠐⠐⠐⠐⠐⠐⡀⠡⠐⠐⢀⠡⠐⠐⠐⠐⠐⠐⠐⠐⠐⠐⢐⠐⠐⠐⡐⢈
-⡈⡈⠄⠐⢈⢈⢈⢈⢈⠨⠈⡈⠄⠄⣢⣬⣬⣴⣴⣬⣌⢈⠨⠈⡈⡈⠌⢈⠈⠄⠠⠁⡁⠄⠄
-⠐⠀⡂⠁⠄⠄⠄⠐⡀⠄⠡⣀⣢⡾⢿⠯⠟⠓⠿⣞⠿⣳⣄⣁⠄⠐⢀⠂⠐⠐⡀⠁⠄⠂⢂
-⠈⠄⠠⠁⠂⢂⢈⠠⠐⠐⠠⠼⣏⣙⡵⠞⠿⠛⡿⠶⣬⣙⣹⠦⢀⠡⠀⠂⡁⠡⠀⠡⠈⡐⠠
-⢂⠈⠄⡈⠌⠠⠀⢂⢈⠈⠄⣸⣟⡇⠰⠖⢥⠂⠴⠶⠄⢸⣿⣇⠀⡂⠈⠄⠐⢀⠁⠌⠠⠐⢀
-⠠⠐⠀⡂⠐⡀⠡⠠⠐⢀⢢⣿⠯⡇⢈⠛⢹⠁⠌⢋⠐⢸⢷⣿⡄⠠⠁⡈⡈⠄⠐⢀⢁⠈⠄
-⡀⡁⠅⠐⠠⠐⠐⡈⠐⠠⠀⣿⢷⣿⡄⣢⡾⠟⣧⣄⢢⣿⡾⣷⠀⢂⠡⠠⠐⡀⠡⠠⠀⢂⠈
-⠄⠐⡀⡁⠌⢀⠡⠀⠅⡈⢰⡿⣯⡷⣿⢿⣘⣶⣃⣿⣟⢷⣟⣿⡆⠐⡀⠂⡁⢐⠐⢀⠡⠀⠂
-⢁⠂⠠⠐⢈⠠⠐⢀⠡⠠⠀⣛⡯⠇⡈⠻⢿⠽⡯⠟⠠⠸⢟⣚⠀⠡⢀⠡⠀⢂⠐⠠⠐⠈⠄
-⠀⡂⢁⠈⠄⠐⡈⠠⠐⡼⠚⡉⠄⠂⣰⡔⠀⡂⣀⣿⢰⣌⠀⠍⠳⢮⠀⡐⢈⠀⡂⠁⠌⠐⡈
-⠡⠀⢂⠐⢈⠠⠐⢀⠹⠀⢂⢐⣼⠞⢋⠀⠅⢄⣾⠃⠠⠙⠻⣦⡈⠈⠇⡀⠂⠄⠠⢁⠨⠀⠄
-⠂⠡⠀⠌⡀⢂⠈⠄⠄⠡⠠⠈⡙⢷⣤⡂⠈⣼⠃⠨⢀⡵⠾⠋⡀⠡⠐⡀⠌⠐⡀⠂⡐⢈⠠
-⠨⠐⢈⠠⠐⡀⢐⠀⡁⢂⠈⠄⠄⠂⡈⢃⠹⠏⠠⠁⡈⠅⡈⠄⠐⡀⠡⠀⢂⠁⠄⠡⠠⠀⢂
-⠄⠨⢀⠐⡀⣂⡐⠠⣐⣀⠐⣈⣀⣿⠀⣄⣂⠈⣞⠠⣐⡠⠐⣈⡄⢐⡀⢡⡀⣂⣂⠂⡁⠌⢀
-⠄⠨⢀⠐⢸⡩⢉⣸⡏⢘⡇⣿⠉⣿⢸⡧⠽⠆⣿⢸⡭⠽⠘⠧⢭⢸⡇⢸⡇⠿⢬⡠⠐⢈⠀
-⡈⠄⠂⡐⢈⠙⢋⠀⡙⢋⢁⠉⡋⠋⠌⠙⢋⢡⡿⢈⠙⢋⠈⢛⠋⡈⠛⢙⠁⡙⢋⠠⠈⠄⡈
-⠀⢂⠡⠠⠐⢀⠂⠐⠠⠀⠂⠄⢂⠈⠄⠁⠄⠄⢂⠠⠈⠄⠨⠀⠄⠂⡁⠄⢂⠠⠐⠠⠈⠄⠐
-⠁⠄⠂⡈⢐⠀⠌⠈⠄⡁⠌⢀⠂⢐⠈⡀⠅⢈⠠⠐⢈⠐⡈⠐⡈⠠⠐⢀⠂⠐⡈⠄⠨⢀⠡
-`;
-
-// ESM environment: Create __dirname
+// Create __dirname in ESM environment
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -56,35 +34,9 @@ function loadData() {
 
 program
   .name('cojus')
-  .description('CLI tool to install or uninstall APIs by document number')
-  .version('0.1.5', '-v, --version', 'Display version information')
+  .description('CLI tool to help install and uninstall APIs by document number')
+  .version('0.1.5', '-v, --version', 'Output version information')
   .allowUnknownOption(true);
-
-// Help command
-program
-  .command('help')
-  .description('Display available commands')
-  .action(() => {
-    console.log(chalk.cyan('Available commands:'));
-    console.log(chalk.green('  npx cojus -<doc_number> [-<doc_number> ...]') + ' : Install packages by document numbers');
-    console.log(chalk.green('  npx cojus -del') + ' : Uninstall installed packages');
-    console.log(chalk.green('  npx cojus -list') + ' : List all available packages in api_posts.json');
-    console.log(chalk.green('  npx cojus -v, --version') + ' : Display version information');
-    console.log(chalk.green('  npx cojus -help') + ' : Display this help message');
-    process.exit(0);
-  });
-
-// List command
-program
-  .command('list')
-  .description('List all available packages')
-  .action(() => {
-    const data = loadData();
-    const list = data.map(item => ({ id: item.id, title: item.title }));
-    console.log(chalk.cyan('Available packages:'));
-    console.table(list);
-    process.exit(0);
-  });
 
 program.parse(process.argv);
 const args = process.argv.slice(2);
@@ -93,34 +45,61 @@ const args = process.argv.slice(2);
   const data = loadData(); // [{id, npm_command, title}, ...]
   const mapById = new Map(data.map(item => [item.id, item]));
 
-  // Uninstall mode
+  // Help mode
+  if (args.includes('-help')) {
+    console.log(chalk.cyan('cojus CLI Help'));
+    console.log(chalk.cyan('-------------'));
+    console.log('Usage:');
+    console.log('  npx cojus -<doc_number> [-<doc_number> ...]  Install APIs by document number');
+    console.log('  npx cojus -del                              Uninstall installed libraries');
+    console.log('  npx cojus -list                             List all APIs in api_posts.json');
+    console.log('  npx cojus -v, --version                     Show version information');
+    console.log('  npx cojus -help                             Show this help message');
+    console.log(chalk.cyan('Examples:'));
+    console.log('  npx cojus -36 -38                         Install GSAP and Swiper.js');
+    console.log('  npx cojus -del                            Uninstall selected libraries');
+    console.log('  npx cojus -list                           List all available APIs');
+    process.exit(0);
+  }
+
+  // List mode
+  if (args.includes('-list')) {
+    console.log(chalk.cyan('Available APIs in api_posts.json'));
+    console.log(chalk.cyan('-------------------------------'));
+    data.forEach(item => {
+      console.log(`ID: ${item.id}, Title: ${item.title}`);
+    });
+    process.exit(0);
+  }
+
+  // Delete mode
   if (args.includes('-del')) {
-    // Get installed packages
+    // Load installed package list
     let installedNames = [];
     try {
       const json = execSync('npm list --depth=0 --json').toString();
       const parsed = JSON.parse(json);
       installedNames = parsed.dependencies ? Object.keys(parsed.dependencies) : [];
     } catch {
-      console.error(chalk.red('Error: Could not retrieve installed package list.'));
+      console.error(chalk.red('Error: Failed to load installed package list.'));
       process.exit(1);
     }
 
-    // Extract package names from api_posts.json
+    // Extract npm package names from api_posts.json
     const itemsWithPkg = data.map(item => {
       const parts = item.npm_command.trim().split(' ');
       const pkgName = parts[parts.length - 1];
       return { ...item, pkgName };
     });
 
-    // Filter actually installed packages
+    // Filter only installed packages
     const installedItems = itemsWithPkg.filter(item => installedNames.includes(item.pkgName));
     if (installedItems.length === 0) {
       console.log(chalk.yellow('No installed libraries found.'));
       process.exit(0);
     }
 
-    // Choices: title (package name)
+    // Choices: Title (npm package name)
     const choices = installedItems.map(item => ({ name: `${item.title} (${item.pkgName})`, value: item.pkgName }));
     choices.unshift({ name: 'all', value: 'all' });
 
@@ -129,7 +108,7 @@ const args = process.argv.slice(2);
       name: 'toRemove',
       message: 'Select libraries to uninstall (use spacebar to select, then press enter)',
       choices,
-      validate: sel => sel.length > 0 || 'At least one selection is required.'
+      validate: sel => sel.length > 0 || 'At least one library must be selected.'
     }]);
 
     let targets = answers.toRemove;
@@ -141,7 +120,7 @@ const args = process.argv.slice(2);
       console.log(chalk.cyan(`→ Uninstalling ${pkg}...`));
       await new Promise(resolve => {
         exec(`npm uninstall ${pkg}`, { shell: true }, (err, stdout, stderr) => {
-          if (err) console.error(chalk.red(`Failed to uninstall ${pkg}: ${err.message}`));
+          if (err) console.error(chalk.red(`${pkg} uninstallation failed: ${err.message}`));
           else {
             if (stdout) console.log(chalk.green(stdout));
             if (stderr) console.error(chalk.yellow(stderr));
@@ -151,8 +130,7 @@ const args = process.argv.slice(2);
         });
       });
     }
-    console.log(chalk.green('\nAll uninstall operations completed.'));
-    console.log(SUCCESS_ASCII_ART);
+    console.log(chalk.green('\nAll uninstallation tasks completed.'));
     process.exit(0);
   }
 
@@ -186,15 +164,33 @@ const args = process.argv.slice(2);
           }
           if (stdout) console.log(chalk.green(stdout));
           if (stderr) console.error(chalk.yellow(stderr));
-          console.log(chalk.magenta(`(ID ${id}) Installed successfully.`));
           resolve();
         });
       });
     } catch {
-      console.error(chalk.red(`Error during installation of ID ${id}. Continuing...`));
+      console.error(chalk.red(`Error occurred while installing ID ${id}. Continuing...`));
     }
   }
 
-  console.log(chalk.magenta('\nAll operations completed successfully.'));
-  console.log(SUCCESS_ASCII_ART);
+  console.log(chalk.magenta('\nAll tasks completed successfully.'));
+  console.log(chalk.green(`
+⠐⠐⠐⡐⠐⠐⠐⠐⠐⠐⠐⠐⠐⡀⠡⠐⠐⢀⠡⠐⠐⠐⠐⠐⠐⠐⠐⠐⠐⢐⠐⠐⠐⡐⢈
+⡈⡈⠄⠐⢈⢈⢈⢈⢈⠨⠈⡈⠄⠄⣢⣬⣬⣴⣴⣬⣌⢈⠨⠈⡈⡈⠌⢈⠈⠄⠠⠁⡁⠄⠄
+⠐⠀⡂⠁⠄⠄⠄⠐⡀⠄⠡⣀⣢⡾⢿⠯⠟⠓⠿⣞⠿⣳⣄⣁⠄⠐⢀⠂⠐⠐⡀⠁⠄⠂⢂
+⠈⠄⠠⠁⠂⢂⢈⠠⠐⠐⠠⠼⣏⣙⡵⠞⠿⠛⡿⠶⣬⣙⣹⠦⢀⠡⠀⠂⡁⠡⠀⠡⠈⡐⠠
+⢂⠈⠄⡈⠌⠠⠀⢂⢈⠈⠄⣸⣟⡇⠰⠖⢥⠂⠴⠶⠄⢸⣿⣇⠀⡂⠈⠄⠐⢀⠁⠌⠠⠐⢀
+⠠⠐⠀⡂⠐⡀⠡⠠⠐⢀⢢⣿⠯⡇⢈⠛⢹⠁⠌⢋⠐⢸⢷⣿⡄⠠⠁⡈⡈⠄⠐⢀⢁⠈⠄
+⡀⡁⠅⠐⠠⠐⠐⡈⠐⠠⠀⣿⢷⣿⡄⣢⡾⠟⣧⣄⢢⣿⡾⣷⠀⢂⠡⠠⠐⡀⠡⠠⠀⢂⠈
+⠄⠐⡀⡁⠌⢀⠡⠀⠅⡈⢰⡿⣯⡷⣿⢿⣘⣶⣃⣿⣟⢷⣟⣿⡆⠐⡀⠂⡁⢐⠐⢀⠡⠀⠂
+⢁⠂⠠⠐⢈⠠⠐⢀⠡⠠⠀⣛⡯⠇⡈⠻⢿⠽⡯⠟⠠⠸⢟⣚⠀⠡⢀⠡⠀⢂⠐⠠⠐⠈⠄
+⠀⡂⢁⠈⠄⠐⡈⠠⠐⡼⠚⡉⠄⠂⣰⡔⠀⡂⣀⣿⢰⣌⠀⠍⠳⢮⠀⡐⢈⠀⡂⠁⠌⠐⡈
+⠡⠀⢂⠐⢈⠠⠐⢀⠹⠀⢂⢐⣼⠞⢋⠀⠅⢄⣾⠃⠠⠙⠻⣦⡈⠈⠇⡀⠂⠄⠠⢁⠨⠀⠄
+⠂⠡⠀⠌⡀⢂⠈⠄⠄⠡⠠⠈⡙⢷⣤⡂⠈⣼⠃⠨⢀⡵⠾⠋⡀⠡⠐⡀⠌⠐⡀⠂⡐⢈⠠
+⠨⠐⢈⠠⠐⡀⢐⠀⡁⢂⠈⠄⠄⠂⡈⢃⠹⠏⠠⠁⡈⠅⡈⠄⠐⡀⠡⠀⢂⠁⠄⠡⠠⠀⢂
+⠄⠨⢀⠐⡀⣂⡐⠠⣐⣀⠐⣈⣀⣿⠀⣄⣂⠈⣞⠠⣐⡠⠐⣈⡄⢐⡀⢡⡀⣂⣂⠂⡁⠌⢀
+⠄⠨⢀⠐⢸⡩⢉⣸⡏⢘⡇⣿⠉⣿⢸⡧⠽⠆⣿⢸⡭⠽⠘⠧⢭⢸⡇⢸⡇⠿⢬⡠⠐⢈⠀
+⡈⠄⠂⡐⢈⠙⢋⠀⡙⢋⢁⠉⡋⠋⠌⠙⢋⢡⡿⢈⠙⢋⠈⢛⠋⡈⠛⢙⠁⡙⢋⠠⠈⠄⡈
+⠀⢂⠡⠠⠐⢀⠂⠐⠠⠀⠂⠄⢂⠈⠄⠁⠄⠄⢂⠠⠈⠄⠨⠀⠄⠂⡁⠄⢂⠠⠐⠠⠈⠄⠐
+⠁⠄⠂⡈⢐⠀⠌⠈⠄⡁⠌⢀⠂⢐⠈⡀⠅⢈⠠⠐⢈⠐⡈⠐⡈⠠⠐⢀⠂⠐⡈⠄⠨⢀⠡
+`));
 })();
