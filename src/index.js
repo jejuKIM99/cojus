@@ -32,6 +32,16 @@ function loadData() {
   }
 }
 
+// Function to extract package names from npm_command
+function extractPackageNames(npmCommand) {
+  const parts = npmCommand.trim().split(' ');
+  const installIndex = parts.indexOf('install');
+  if (installIndex === -1 || installIndex === parts.length - 1) {
+    return [];
+  }
+  return parts.slice(installIndex + 1);
+}
+
 program
   .name('cojus')
   .description('CLI tool to help install and uninstall APIs by document number')
@@ -88,22 +98,24 @@ const args = process.argv.slice(2);
       process.exit(1);
     }
 
-    // Extract npm package names from api_posts.json
-    const itemsWithPkg = data.map(item => {
-      const parts = item.npm_command.trim().split(' ');
-      const pkgName = parts[parts.length - 1];
-      return { ...item, pkgName };
+    // Extract package names from api_posts.json
+    const itemsWithPkgs = data.map(item => {
+      const pkgNames = extractPackageNames(item.npm_command);
+      return { ...item, pkgNames };
     });
 
     // Filter only installed packages
-    const installedItems = itemsWithPkg.filter(item => installedNames.includes(item.pkgName));
+    const installedItems = itemsWithPkgs.filter(item => item.pkgNames.some(pkg => installedNames.includes(pkg)));
     if (installedItems.length === 0) {
       console.log(chalk.yellow('No installed libraries found.'));
       process.exit(0);
     }
 
-    // Choices: Title (npm package name)
-    const choices = installedItems.map(item => ({ name: `${item.title} (${item.pkgName})`, value: item.pkgName }));
+    // Choices: Title (package names)
+    const choices = installedItems.map(item => ({
+      name: `${item.title} (${item.pkgNames.join(', ')})`,
+      value: item.pkgNames
+    }));
     choices.unshift({ name: 'all', value: 'all' });
 
     const answers = await inquirer.prompt([{
@@ -116,8 +128,13 @@ const args = process.argv.slice(2);
 
     let targets = answers.toRemove;
     if (targets.includes('all')) {
-      targets = installedItems.map(item => item.pkgName);
+      targets = installedItems.flatMap(item => item.pkgNames);
+    } else {
+      targets = targets.flat();
     }
+
+    // Remove duplicates
+    targets = [...new Set(targets)];
 
     for (const pkg of targets) {
       console.log(chalk.cyan(`→ Uninstalling ${pkg}...`));
