@@ -1,0 +1,17 @@
+[
+  {
+    "version_tag": "v18.2.0",
+    "npm_command": "npm install react@18.2.0 react-dom@18.2.0",
+    "is_default": true
+  },
+  {
+    "version_tag": "v18.1.0",
+    "npm_command": "npm install react@18.1.0 react-dom@18.1.0",
+    "is_default": false
+  },
+  {
+    "version_tag": "v17.0.2",
+    "npm_command": "npm install react@17.0.2 react-dom@17.0.2",
+    "is_default": false
+  }
+]
