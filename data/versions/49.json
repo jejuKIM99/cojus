@@ -1,0 +1,22 @@
+[
+  {
+    "version_tag": "v3.5.15",
+    "npm_command": "npm install vue@3.5.15",
+    "is_default": true
+  },
+  {
+    "version_tag": "v3.5.14",
+    "npm_command": "npm install vue@3.5.14",
+    "is_default": false
+  },
+  {
+    "version_tag": "v3.5.13",
+    "npm_command": "npm install vue@3.5.13",
+    "is_default": false
+  },
+  {
+    "version_tag": "v3.5.12",
+    "npm_command": "npm install vue@3.5.12",
+    "is_default": false
+  }
+]
