@@ -1,13 +1,13 @@
 name: sync-api-posts
 
-# 1) 퍼미션 명시: GITHUB_TOKEN에 쓰기 권한 부여
+# 1) 퍼미션: GITHUB_TOKEN에 쓰기 권한
 permissions:
   contents: write
   packages: write
 
 on:
   schedule:
-    - cron: '0 * * * *'       # 매 정각 UTC 기준 (KST 매 시각 9시,10시…)
+    - cron: '0 * * * *'       # 매시 정각
   workflow_dispatch:          # 수동 실행 지원
 
 jobs:
@@ -32,40 +32,46 @@ jobs:
       - name: Restore package-lock.json
         run: git checkout -- package-lock.json
 
-      - name: Fetch API posts
+      # ----- 기존 API posts 동기화 -----
+      - name: Fetch API posts (latest only)
         run: npm run fetch-data
 
-      - name: Check for data/api_posts.json changes
+      # ----- 추가: 각 포스트별 버전 정보 동기화 -----
+      - name: Fetch API post versions
+        run: npm run fetch-versions
+
+      - name: Check for data/ folder changes
         id: detect_changes
         run: |
-          git diff --quiet data/api_posts.json || echo "::set-output name=changed::true"
+          # api_posts.json 또는 versions/ 내 JSON 파일 변경 여부 감지
+          git diff --quiet data/ || echo "::set-output name=changed::true"
 
       - name: No changes, exit
         if: steps.detect_changes.outputs.changed != 'true'
         run: |
-          echo "data/api_posts.json에 변경된 항목이 없습니다. 작업을 종료합니다."
+          echo "data/ 폴더에 변경된 항목이 없습니다. 작업 종료."
           exit 0
 
-      - name: Commit updated JSON
+      - name: Commit updated data files
         if: steps.detect_changes.outputs.changed == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/api_posts.json
-          git commit -m "chore: update data/api_posts.json"
+          git add data/
+          git commit -m "chore: update API posts & versions data"
 
       - name: Bump patch version
         if: steps.detect_changes.outputs.changed == 'true'
         run: |
           npm version patch -m "chore: bump version to %s"
 
-      - name: Push changes
+      - name: Push changes & tags
         if: steps.detect_changes.outputs.changed == 'true'
         uses: ad-m/github-push-action@v0.6.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           tags: true
-          branch: main           # ← 기본 브랜치를 main으로 지정
+          branch: main
 
       - name: Publish to npm
         if: steps.detect_changes.outputs.changed == 'true'
