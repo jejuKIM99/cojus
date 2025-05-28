@@ -1,6 +1,5 @@
 # cojus-cli: CLI Integrated Installation Tool
 
-
 ⠂⡁⢂⠁⡂⢈⠐⡈⢐⠈⡐⢀⠁⡂⢁⠂⡈⢐⠈⡐⢈⠐⡈⢐⠈⡐⢈⠐⡈⢐⠈⡐⢈⠐⡈⢐⠈⡐⢈⠐⡀⡁⢂⢈⠐⡈⢐⠈⡐⢈⠠
 ⠐⠠⠐⠠⠐⠠⠐⠠⠐⠠⠐⠠⠐⠠⠐⠠⠐⠠⠐⠠⠐⠠⠐⠠⢐⠠⢐⠠⠐⠠⠐⠠⠐⠠⠐⠠⠐⠠⠐⠠⠐⠠⠐⠠⠐⠠⠐⠠⠐⢀⠂
 ⢁⠨⢀⠡⢈⠠⢁⠨⢀⠡⢈⠠⢁⠨⠀⠅⡈⠄⠡⢈⢤⣵⢯⣿⣟⣿⣻⣟⣷⣮⣄⠡⢈⠠⢁⠨⢀⠡⠈⠄⡁⠌⡀⠅⡈⠄⡁⠌⡈⠄⠐
@@ -28,7 +27,6 @@
 ⠐⡈⠄⠂⠄⠡⠈⠄⢂⠁⠌⠠⠐⡈⠄⠡⠀⠅⡈⠄⠐⡈⠄⢂⠡⠈⠄⠐⡀⠡⠐⡈⠄⠡⠐⡀⢂⠡⠐⢀⠂⡐⠠⠐⡀⠡⠀⢂⠡⠐⠠
 ⠠⠐⡈⠠⠁⠌⠐⡈⠄⢂⠁⡂⠡⠐⡈⠄⢁⠂⡐⠈⠄⠐⡈⠄⢂⠡⠈⠄⠐⡀⠡⠐⡈⠄⠡⠐⡀⢂⠡⠐⠠⠐⡀⠡⠐⡀⠡⠀⢂⠡⠈
 
-
 `cojus-cli` is an integrated installation tool for CLI-supported libraries and frameworks listed on the [CodeJesus](https://codejesus.vercel.app/) website. This tool allows you to install or remove these libraries and frameworks with a single command, streamlining the process beyond simply viewing documentation on the CodeJesus site. It supports multiple installations, selective or bulk removal, and provides easy access to package lists directly from the terminal.
 
 ---
@@ -38,6 +36,7 @@
 - **Single Command Installation**: Install desired libraries/frameworks with one command.
 - **Multiple Package Installation**: Install multiple packages simultaneously.
 - **Easy Removal**: View and selectively or bulk-remove installed CLI packages.
+- **Interactive Search**: Search for libraries/frameworks using a text-based user interface (TUI) and install them directly.
 - **Site Integration**: Generate CLI commands via the CodeJesus website's cart feature.
 - **Offline Workflow Support**: View available packages directly from the terminal.
 - **Community Contribution**: Request new documentation additions through the CodeJesus site.
@@ -130,7 +129,44 @@ npx cojus -del
 # Select packages to delete (e.g., 1,2 or 'all'):
 ```
 
-### 4. Help and Package List
+### 4. Interactive Search and Installation
+
+To search for libraries/frameworks and install them interactively using a text-based user interface (TUI), use:
+
+```bash
+npx cojus -search
+```
+
+- **Search Process**: Enter a search term to find matching libraries/frameworks by title or document number. The tool displays a table of results, including ID, title, and associated npm command.
+- **Selection**: Choose an API from the search results by entering its number. If multiple versions are available for the selected API, you can select a specific version (or the default one).
+- **Installation**: The tool executes the npm install command for the selected API and version, providing feedback on the installation status.
+- **Cancellation**: At any point, you can quit the search by entering 'q', or cancel the process using Ctrl+C or Esc.
+
+**Example**:
+
+```bash
+npx cojus -search
+# Sample interaction:
+# 🔍 Enter search term (or 'q' to quit): gsap
+# Search results:
+# ┌─────────┬──────┬────────────┬──────────────────────────────┐
+# │ Number  │  ID  │ Title      │ NPM Command                  │
+# ├─────────┼──────┼────────────┼──────────────────────────────┤
+# │ 1       │ 36   │ GSAP       │ npm install gsap             │
+# └─────────┴──────┴────────────┴──────────────────────────────┘
+# Enter the number of the API to install (or 'q' to quit). Press Ctrl+C or Esc to cancel.
+# Select number: 1
+# → Installing: npm install gsap
+# ✅ Installation complete.
+```
+
+**Features of the Search Command**:
+- **Flexible Search**: Matches search terms against both titles and document numbers.
+- **Version Selection**: If an API has multiple versions (stored in the `data/versions` directory), you can choose a specific version using an autocomplete prompt.
+- **Error Handling**: Provides clear error messages for invalid inputs or failed installations, with options to retry or cancel.
+- **User-Friendly**: The TUI guides you through the process with clear prompts and feedback.
+
+### 5. Help and Package List
 
 #### Help
 To view available commands and usage examples:
