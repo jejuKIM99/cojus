@@ -40,11 +40,13 @@ jobs:
       - name: Fetch API post versions
         run: npm run fetch-versions
 
-      - name: Check for data/ folder changes
+      - name: Check for data/ folder changes (including untracked)
         id: detect_changes
         run: |
-          # api_posts.json 또는 versions/ 내 JSON 파일 변경 여부 감지
-          git diff --quiet data/ || echo "::set-output name=changed::true"
+          # 변경되거나 새로 생성된 파일이 있는지 검사
+          if [ -n "$(git status --porcelain data/)" ]; then
+            echo "::set-output name=changed::true"
+          fi
 
       - name: No changes, exit
         if: steps.detect_changes.outputs.changed != 'true'
