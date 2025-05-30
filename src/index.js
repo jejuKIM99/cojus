@@ -283,3 +283,4 @@ const args = process.argv.slice(2);
   }
   console.log(chalk.green('All installation tasks completed successfully.'));
 })();
+// test
