@@ -15,6 +15,11 @@
     "title": "Vue - board"
   },
   {
+    "id": 40,
+    "npm_command": "npm install fullpage.js",
+    "title": "FullPage.js"
+  },
+  {
     "id": 38,
     "npm_command": "npm install swiper",
     "title": "Swiper.js"
