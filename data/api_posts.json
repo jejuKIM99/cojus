@@ -1,5 +1,10 @@
 [
   {
+    "id": 56,
+    "npm_command": "",
+    "title": "Next.js"
+  },
+  {
     "id": 36,
     "npm_command": "npm install gsap",
     "title": "GSAP"
