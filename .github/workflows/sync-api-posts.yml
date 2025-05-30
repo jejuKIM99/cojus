@@ -9,9 +9,6 @@ on:
   schedule:
     - cron: '0 * * * *'       # 매시 정각
   workflow_dispatch:          # 수동 실행 지원
-  push:
-    branches:
-      - main                 # main 브랜치에 푸시 시 실행
 
 jobs:
   sync:
@@ -22,8 +19,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-        with:
-          fetch-depth: 0        # 전체 Git 히스토리 가져오기
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
@@ -45,29 +40,18 @@ jobs:
       - name: Fetch API post versions
         run: npm run fetch-versions
 
-      - name: Debug Git status
-        run: |
-          echo "Current branch:"
-          git branch --show-current
-          echo "Git status:"
-          git status
-          echo "Changes in data/ and src/scripts/:"
-          git status --porcelain data/ src/scripts/ || echo "No changes detected"
-
-      - name: Check for data/ or src/scripts/ folder changes (including untracked)
+      - name: Check for data/ folder changes (including untracked)
         id: detect_changes
         run: |
-          # data/ 또는 src/scripts/ 폴더에 변경되거나 새로 생성된 파일이 있는지 검사
-          if [ -n "$(git status --porcelain data/ src/scripts/)" ]; then
-            echo "changed=true" >> $GITHUB_OUTPUT
-          else
-            echo "changed=false" >> $GITHUB_OUTPUT
+          # 변경되거나 새로 생성된 파일이 있는지 검사
+          if [ -n "$(git status --porcelain data/)" ]; then
+            echo "::set-output name=changed::true"
           fi
 
       - name: No changes, exit
         if: steps.detect_changes.outputs.changed != 'true'
         run: |
-          echo "data/ 또는 src/scripts/ 폴더에 변경된 항목이 없습니다. 작업 종료."
+          echo "data/ 폴더에 변경된 항목이 없습니다. 작업 종료."
           exit 0
 
       - name: Commit updated data files
@@ -75,8 +59,8 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/ src/scripts/
-          git commit -m "chore: update API posts, versions data, or scripts"
+          git add data/
+          git commit -m "chore: update API posts & versions data"
 
       - name: Bump patch version
         if: steps.detect_changes.outputs.changed == 'true'
