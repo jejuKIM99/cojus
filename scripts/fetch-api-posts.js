@@ -32,7 +32,7 @@ async function main() {
     const { data, error } = await supabase
       .from('api_posts')
       .select('id, npm_command, title')
-      .eq('type', 'API')
+      .or('type.eq.API,type.eq.Quick Start')
       .not('npm_command', 'is', null);
 
     if (error) throw error;
