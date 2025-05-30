@@ -221,22 +221,28 @@ const args = process.argv.slice(2);
       console.error(chalk.red('Error: Failed to load installed package list.'));
       process.exit(1);
     }
+    // Collect all unique package names from installed items
     const itemsWithPkgs = data.map(item => ({ ...item, pkgNames: extractPackageNames(item.npm_command) }));
-    const installedItems = itemsWithPkgs.filter(item => item.pkgNames.some(pkg => installedNames.includes(pkg)));
-    if (installedItems.length === 0) {
+    const uniquePkgs = [...new Set(itemsWithPkgs.flatMap(item => item.pkgNames).filter(pkg => installedNames.includes(pkg)))];
+    if (uniquePkgs.length === 0) {
       console.log(chalk.yellow('No installed libraries found.'));
       process.exit(0);
     }
-    const choices = installedItems.map(item => ({ name: `${item.title} (${item.pkgNames.join(', ')})`, value: item.pkgNames }));
+    // Create choices based on unique package names
+    const choices = uniquePkgs.map(pkg => ({ name: pkg, value: pkg }));
     choices.unshift({ name: 'all', value: 'all' });
-    const answers = await inquirer.prompt([{ type: 'checkbox', name: 'toRemove', message: 'Select libraries to uninstall', choices, validate: sel => sel.length > 0 || 'At least one library must be selected.' }]);
+    const answers = await inquirer.prompt([{
+      type: 'checkbox',
+      name: 'toRemove',
+      message: 'Select libraries to uninstall',
+      choices,
+      validate: sel => sel.length > 0 || 'At least one library must be selected.',
+      loop: false // Prevent circular scrolling
+    }]);
     let targets = answers.toRemove;
     if (targets.includes('all')) {
-      targets = installedItems.flatMap(item => item.pkgNames);
-    } else {
-      targets = targets.flat();
+      targets = uniquePkgs;
     }
-    targets = [...new Set(targets)];
     for (const pkg of targets) {
       console.log(chalk.cyan(`→ Uninstalling ${pkg}...`));
       await new Promise(resolve => exec(`npm uninstall ${pkg}`, { shell: true }, () => resolve()));
