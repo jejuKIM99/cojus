@@ -40,18 +40,18 @@ jobs:
       - name: Fetch API post versions
         run: npm run fetch-versions
 
-      - name: Check for data/ folder changes (including untracked)
+      - name: Check for data/ or src/scripts/ folder changes (including untracked)
         id: detect_changes
         run: |
-          # 변경되거나 새로 생성된 파일이 있는지 검사
-          if [ -n "$(git status --porcelain data/)" ]; then
+          # data/ 또는 src/scripts/ 폴더에 변경되거나 새로 생성된 파일이 있는지 검사
+          if [ -n "$(git status --porcelain data/ src/scripts/)" ]; then
             echo "::set-output name=changed::true"
           fi
 
       - name: No changes, exit
         if: steps.detect_changes.outputs.changed != 'true'
         run: |
-          echo "data/ 폴더에 변경된 항목이 없습니다. 작업 종료."
+          echo "data/ 또는 src/scripts/ 폴더에 변경된 항목이 없습니다. 작업 종료."
           exit 0
 
       - name: Commit updated data files
@@ -59,8 +59,8 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/
-          git commit -m "chore: update API posts & versions data"
+          git add data/ src/scripts/
+          git commit -m "chore: update API posts, versions data, or scripts"
 
       - name: Bump patch version
         if: steps.detect_changes.outputs.changed == 'true'
