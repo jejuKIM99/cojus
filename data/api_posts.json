@@ -5,6 +5,11 @@
     "title": "GSAP"
   },
   {
+    "id": 54,
+    "npm_command": "npm install vue-router pinia axios tailwindcss postcss autoprefixer @vueuse/core",
+    "title": "Vue - board"
+  },
+  {
     "id": 38,
     "npm_command": "npm install swiper",
     "title": "Swiper.js"
