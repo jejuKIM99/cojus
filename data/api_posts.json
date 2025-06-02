@@ -1,5 +1,10 @@
 [
   {
+    "id": 59,
+    "npm_command": "npm install axios @tanstack/svelte-query",
+    "title": "Svelte - board"
+  },
+  {
     "id": 36,
     "npm_command": "npm install gsap",
     "title": "GSAP"
@@ -48,5 +53,10 @@
     "id": 55,
     "npm_command": "npm install react-router-dom zustand axios tailwindcss postcss autoprefixer @tanstack/react-query",
     "title": "React - board"
+  },
+  {
+    "id": 58,
+    "npm_command": "npm install -D tailwindcss postcss autoprefixer",
+    "title": "Tailwind CSS"
   }
 ]
