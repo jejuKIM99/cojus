@@ -224,8 +224,8 @@ A: Try the following steps:
 
 `cojus-cli` is designed for the developer community. For bug reports, feature suggestions, or documentation requests, visit the [CodeJesus website](https://codejesus.vercel.app/).
 
-**CodeJesus Website**: [https://codejesus.vercel.app/](https://codejesus.vercel.app/)
-**cojus-cli Website**: [https://cojus.vercel.app/](https://cojus.vercel.app/)
+**CodeJesus Website**: [https://codejesus.vercel.app/](https://codejesus.vercel.app/)<br>
+**cojus-cli Website**: [https://cojus.vercel.app/](https://cojus.vercel.app/)<br>
 **cojus-cli github**: [https://github.com/jejuKIM99/cojus](https://github.com/jejuKIM99/cojus)
 
 ---
