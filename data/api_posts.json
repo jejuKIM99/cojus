@@ -20,6 +20,11 @@
     "title": "FullPage.js"
   },
   {
+    "id": 60,
+    "npm_command": "npm install sass --save-dev",
+    "title": "SCSS(Sass)"
+  },
+  {
     "id": 38,
     "npm_command": "npm install swiper",
     "title": "Swiper.js"
