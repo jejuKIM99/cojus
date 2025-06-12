@@ -25,6 +25,11 @@
     "title": "SCSS(Sass)"
   },
   {
+    "id": 63,
+    "npm_command": "npm install animejs",
+    "title": "anime.js"
+  },
+  {
     "id": 38,
     "npm_command": "npm install swiper",
     "title": "Swiper.js"
